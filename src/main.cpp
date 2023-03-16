@@ -4,7 +4,7 @@
  */
 #include "USBSerial.h"
 #include "mbed.h"
-#include "motor.h"
+#include "motor_ssl_brushless_L4.h"
 #include "pid.h"
 
 static DigitalOut led1(PB_1);
@@ -37,6 +37,8 @@ static void terminal_printf(const char *fmt, ...) {
     usb_serial.write(terminal_buff, terminal_length);
 }
 
+static float dt_pid = 0.0f, hz_pid = 0.0f;
+
 int main() {
     // Setup USB Serial
     usb_serial.init();
@@ -44,6 +46,11 @@ int main() {
 
     // Setup control ticker
     controlTicker.attach(&controlFlagUpdate, CONTROL_RATE);
+
+    // Convert current rate of the loop in seconds (float)
+    auto f_secs = std::chrono::duration_cast<std::chrono::duration<float>>(CONTROL_RATE);
+    dt_pid = f_secs.count();
+    hz_pid = 1.0f / dt_pid; // Very important for all PIDs
 
     int printf_incr = 0;
     while (true) {

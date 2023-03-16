@@ -31,7 +31,7 @@ void MotorSSLBrushlessL4::stop() {
 
 void MotorSSLBrushlessL4::update() {
     // update magnetic sensor value
-    _currentSpeed = _sensor->getSpeed();
+    //    _currentSpeed = _sensor->getSpeed();
 
     // update PID
     PID_args motor_pid_args;
