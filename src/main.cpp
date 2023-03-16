@@ -4,6 +4,8 @@
  */
 #include "USBSerial.h"
 #include "mbed.h"
+#include "motor.h"
+#include "pid.h"
 
 static DigitalOut led1(PB_1);
 
