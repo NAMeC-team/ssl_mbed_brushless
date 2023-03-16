@@ -1,5 +1,10 @@
 .build
 projectfiles
 *.py*
+.idea/
+GettingStarted.html
+cmake-build-debug/
+mbed_config.h
+CMakeLists.txt
 
 # Do NOT ignore files below
