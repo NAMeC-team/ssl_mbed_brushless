@@ -44,7 +44,7 @@ mbed compile
 Program the target device with a Segger J-Link debug probe and
 [`sixtron_flash`](https://gitlab.com/catie_6tron/6tron-flash) tool:
 ```shell
-sixtron_flash stm32l4a6rg BUILD/ZEST_CORE_STM32L4A6RG/GCC_ARM/mbed_ssl-brushless.elf
+sixtron_flash
 ```
 
 Debug on the target device with the probe and Segger
