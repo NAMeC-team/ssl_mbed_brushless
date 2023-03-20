@@ -7,7 +7,7 @@
 #include "motor_sensor_mbed_AS5047p.h"
 #include "pid.h"
 
-static DigitalOut led1(PB_1);
+static DigitalOut led(PB_1);
 
 #define CONTROL_RATE 50ms
 #define CONTROL_FLAG 0x01
@@ -51,6 +51,9 @@ static void terminal_printf(const char *fmt, ...) {
 static float dt_pid = 0.0f, hz_pid = 0.0f;
 
 int main() {
+
+    led = 0;
+
     // Setup USB Serial
     usb_serial.init();
     usb_serial.connect();
@@ -78,8 +81,10 @@ int main() {
     pid_motor_params.Ki = 500.0f;
     pid_motor_params.Kd = 0.00f;
     pid_motor_params.ramp = 3.0f * dt_pid;
-    //    pid_motor_params.ramp = 1.0f * dt_pid; //
     motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, 250.0f);
+    motor->init();
+
+    motor->setPWM(-90);
 
     int printf_incr = 0;
     while (true) {
@@ -89,8 +94,8 @@ int main() {
         sensor->update();
 
         // Do control loop
-        led1 = !led1;
-        if (led1) {
+        led = !led;
+        if (led) {
             terminal_printf("AS5047 sensor value: %8lld\tspeed: %6dmm/s\r",
                     sensor->getTickCount(),
                     int32_t(sensor->getSpeed() * 1000.0f));

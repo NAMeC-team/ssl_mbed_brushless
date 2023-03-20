@@ -5,13 +5,43 @@
 #ifndef CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_L4_H
 #define CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_L4_H
 
+// MBED LIBRARIES
 #include "mbed.h"
 #include "motor/motor.h"
 #include "pid/pid.h"
 
+// STM32 LL LIBRARIES
+#include "stm32l4xx_ll_bus.h"
+#include "stm32l4xx_ll_cortex.h"
+#include "stm32l4xx_ll_crs.h"
+#include "stm32l4xx_ll_dma.h"
+#include "stm32l4xx_ll_exti.h"
+#include "stm32l4xx_ll_gpio.h"
+#include "stm32l4xx_ll_pwr.h"
+#include "stm32l4xx_ll_rcc.h"
+#include "stm32l4xx_ll_system.h"
+#include "stm32l4xx_ll_tim.h"
+#include "stm32l4xx_ll_utils.h"
+
 namespace sixtron {
 
 #define DEFAULT_MOTOR_MAX_PWM 1.0f // max PWM with mbed is 1.0f
+
+#define HALL_U_Pin GPIO_PIN_0 // PA0
+#define HALL_V_Pin GPIO_PIN_1 // PA1
+#define HALL_W_Pin GPIO_PIN_2 // PA2
+#define EN_U_Pin GPIO_PIN_6
+#define EN_U_GPIO_Port GPIOC
+#define EN_V_Pin GPIO_PIN_7
+#define EN_V_GPIO_Port GPIOC
+#define EN_W_Pin GPIO_PIN_8
+#define EN_W_GPIO_Port GPIOC
+#define PWM_U_Pin GPIO_PIN_8
+#define PWM_U_GPIO_Port GPIOA
+#define PWM_V_Pin GPIO_PIN_9
+#define PWM_V_GPIO_Port GPIOA
+#define PWM_W_Pin GPIO_PIN_10
+#define PWM_W_GPIO_Port GPIOA
 
 class MotorSSLBrushless: Motor {
 
@@ -28,9 +58,15 @@ public:
 
     void setSpeed(float speed_ms) override;
 
+    void setPWM(int pwm);
+
     float getSpeed() override;
 
 private:
+    static void init_gpios();
+    static void init_pwms();
+    static void init_interrupt();
+
     PID _pid;
 
     motor_status _currentStatus;
