@@ -4,12 +4,12 @@
  */
 #include "USBSerial.h"
 #include "mbed.h"
-#include "motor_ssl_brushless_L4.h"
+#include "motor_sensor_mbed_AS5047p.h"
 #include "pid.h"
 
 static DigitalOut led1(PB_1);
 
-#define CONTROL_RATE 1s
+#define CONTROL_RATE 50ms
 #define CONTROL_FLAG 0x01
 Ticker controlTicker;
 EventFlags controlFlag;
@@ -24,6 +24,17 @@ USBSerial usb_serial(false);
 FileHandle *mbed::mbed_override_console(int fd) {
     return &usb_serial;
 }
+
+// Sensor
+#define ENC_RESOLUTION 16383
+#define MOTOR_REDUCTION 1
+#define ENC_WHEEL_RADIUS (0.058f / 2.0f)
+SPI spi_sensor(PB_15, PB_14, PB_13); // mosi, miso, sclk
+sixtron::MotorSensorMbedAS5047P *sensor;
+
+// Motor
+#include "motor_ssl_brushless_L4.h"
+sixtron::MotorSSLBrushless *motor;
 
 // Setup terminal custom printf fonction
 static char terminal_buff[64];
@@ -50,17 +61,39 @@ int main() {
     // Convert current rate of the loop in seconds (float)
     auto f_secs = std::chrono::duration_cast<std::chrono::duration<float>>(CONTROL_RATE);
     dt_pid = f_secs.count();
-    hz_pid = 1.0f / dt_pid; // Very important for all PIDs
+
+    // Intialisation of the sensor
+    sensor = new sixtron::MotorSensorMbedAS5047P(&spi_sensor,
+            PB_12,
+            dt_pid,
+            ENC_RESOLUTION,
+            ENC_RESOLUTION * MOTOR_REDUCTION,
+            ENC_WHEEL_RADIUS,
+            DIR_NORMAL);
+    sensor->init();
+
+    // Initialisation of the motor
+    sixtron::PID_params pid_motor_params;
+    pid_motor_params.Kp = 250.0f;
+    pid_motor_params.Ki = 500.0f;
+    pid_motor_params.Kd = 0.00f;
+    pid_motor_params.ramp = 3.0f * dt_pid;
+    //    pid_motor_params.ramp = 1.0f * dt_pid; //
+    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, 250.0f);
 
     int printf_incr = 0;
     while (true) {
         // Wait for ticker flag
         controlFlag.wait_any(CONTROL_FLAG);
 
+        sensor->update();
+
         // Do control loop
         led1 = !led1;
         if (led1) {
-            terminal_printf("Alive! (i=%d)\n", printf_incr);
+            terminal_printf("AS5047 sensor value: %8lld\tspeed: %6dmm/s\r",
+                    sensor->getTickCount(),
+                    int32_t(sensor->getSpeed() * 1000.0f));
             printf_incr++;
         }
     }

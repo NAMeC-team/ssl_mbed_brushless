@@ -13,10 +13,10 @@ namespace sixtron {
 
 #define DEFAULT_MOTOR_MAX_PWM 1.0f // max PWM with mbed is 1.0f
 
-class MotorSSLBrushlessL4: Motor {
+class MotorSSLBrushless: Motor {
 
 public:
-    MotorSSLBrushlessL4(float rateHz, PID_params motor_pid, float max_pwm = DEFAULT_MOTOR_MAX_PWM);
+    MotorSSLBrushless(float rate_dt, PID_params motor_pid, float max_pwm = DEFAULT_MOTOR_MAX_PWM);
 
     void init() override;
 

@@ -6,30 +6,30 @@
 
 namespace sixtron {
 
-MotorSSLBrushlessL4::MotorSSLBrushlessL4(float rateHz, PID_params motor_pid, float max_pwm):
-        _pid(motor_pid, rateHz) {
+MotorSSLBrushless::MotorSSLBrushless(float rate_dt, PID_params motor_pid, float max_pwm):
+        _pid(motor_pid, rate_dt) {
 
     _pid.setLimit(sixtron::PID_limit::output_limit_HL, max_pwm);
 
     _currentStatus = motor_status::stop;
 }
 
-void MotorSSLBrushlessL4::init() {
+void MotorSSLBrushless::init() {
 }
 
-void MotorSSLBrushlessL4::start() {
+void MotorSSLBrushless::start() {
     if (_currentStatus == motor_status::stop) {
         _currentStatus = motor_status::run;
     }
 }
 
-void MotorSSLBrushlessL4::stop() {
+void MotorSSLBrushless::stop() {
     if (_currentStatus == motor_status::run) {
         _currentStatus = motor_status::stop;
     }
 }
 
-void MotorSSLBrushlessL4::update() {
+void MotorSSLBrushless::update() {
     // update magnetic sensor value
     //    _currentSpeed = _sensor->getSpeed();
 
@@ -44,11 +44,11 @@ void MotorSSLBrushlessL4::update() {
     // update hardware
 }
 
-void MotorSSLBrushlessL4::setSpeed(float speed_ms) {
+void MotorSSLBrushless::setSpeed(float speed_ms) {
     _targetSpeed = speed_ms;
 }
 
-float MotorSSLBrushlessL4::getSpeed() {
+float MotorSSLBrushless::getSpeed() {
     return _currentSpeed;
 }
 
