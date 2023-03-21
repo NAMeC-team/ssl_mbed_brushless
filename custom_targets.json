@@ -18,7 +18,7 @@
             "MBEDTLS_CONFIG_HW_SUPPORT"
         ]
     },
-    "ZEST_CORE_STM32L4A6RG": {
+    "SSL_BRUSHLESS_L4A6": {
         "bootloader_supported": true,
         "supported_toolchains": [
             "ARM",
@@ -48,5 +48,18 @@
             "USBDEVICE"
         ],
         "device_name": "STM32L4A6RGTx"
+    },
+    "SSL_BRUSHLESS_F103": {
+        "inherits": [
+            "MCU_STM32F103xB"
+        ],
+        "overrides": {
+            "clock_source": "USE_PLL_HSI"
+        },
+        "device_has_add": [
+            "QSPI",
+            "USBDEVICE"
+        ],
+        "device_name": "STM32F103RB"
     }
 }

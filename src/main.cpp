@@ -7,7 +7,7 @@
 #include "motor_sensor_mbed_AS5047p.h"
 #include "pid.h"
 
-static DigitalOut led(PB_1);
+static DigitalOut led(LED1);
 
 #define CONTROL_RATE 50ms
 #define CONTROL_FLAG 0x01
@@ -29,7 +29,7 @@ FileHandle *mbed::mbed_override_console(int fd) {
 #define ENC_RESOLUTION 16383
 #define MOTOR_REDUCTION 1
 #define ENC_WHEEL_RADIUS (0.058f / 2.0f)
-SPI spi_sensor(PB_15, PB_14, PB_13); // mosi, miso, sclk
+SPI spi_sensor(ENC_MOSI, ENC_MISO, ENC_SCK); // mosi, miso, sclk
 sixtron::MotorSensorMbedAS5047P *sensor;
 
 // Motor
@@ -67,7 +67,7 @@ int main() {
 
     // Intialisation of the sensor
     sensor = new sixtron::MotorSensorMbedAS5047P(&spi_sensor,
-            PB_12,
+            ENC_CS,
             dt_pid,
             ENC_RESOLUTION,
             ENC_RESOLUTION * MOTOR_REDUCTION,
@@ -84,7 +84,7 @@ int main() {
     motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, 250.0f);
     motor->init();
 
-    motor->setPWM(-90);
+    motor->setPWM(120);
 
     int printf_incr = 0;
     while (true) {
