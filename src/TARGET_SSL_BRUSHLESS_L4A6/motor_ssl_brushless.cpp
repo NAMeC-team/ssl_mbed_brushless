@@ -2,7 +2,10 @@
  * Copyright (c) 2023, CATIE
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "motor_ssl_brushless_L4.h"
+
+// CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_L4A6_CPP
+
+#include "motor_ssl_brushless.h"
 
 namespace sixtron {
 
@@ -174,18 +177,26 @@ void MotorSSLBrushless::init_pwms() {
     LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
+volatile int hall_value_debug_raw;
+
 static inline int _motor_control_get_hall(void) {
     static const unsigned int hall_to_phase[6] = { 0, 2, 1, 4, 5, 3 };
 
-    int hall_value = (LL_GPIO_IsInputPinSet(GPIOA, HALL_U_Pin) << 2)
-            | (LL_GPIO_IsInputPinSet(GPIOA, HALL_V_Pin) << 1)
-            | (LL_GPIO_IsInputPinSet(GPIOA, HALL_W_Pin));
+    int hall_value = (LL_GPIO_IsInputPinSet(HALL_U_GPIO_Port, HALL_U_Pin) << 2)
+            | (LL_GPIO_IsInputPinSet(HALL_V_GPIO_Port, HALL_V_Pin) << 1)
+            | (LL_GPIO_IsInputPinSet(HALL_W_GPIO_Port, HALL_W_Pin));
+
+    hall_value_debug_raw = hall_value;
 
     if ((hall_value >= 1) && (hall_value <= 6)) { // hall value ok
         return hall_to_phase[hall_value - 1];
     } else { // not a valid value
         return -1;
     }
+}
+
+int MotorSSLBrushless::get_last_hall_value() {
+    return hall_value_debug_raw;
 }
 
 void _motor_control_update_sector(void) {
@@ -262,11 +273,21 @@ void _motor_control_update_pwm(int sector, int pwm_value) {
     _motor_control_set_pwm(motor_phases[pmw_pin[drive_sector]], pwm);
 }
 
+volatile int test = 0;
+
 void custom_EXTI_IRQHandler(void) {
 
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_1);
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_2);
+
+    if (test == 0) {
+        test = 1;
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+    } else {
+        test = 0;
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+    }
 
     _motor_control_update_sector();
     _motor_control_update_pwm(_sector, _pwm_value);
@@ -275,17 +296,17 @@ void custom_EXTI_IRQHandler(void) {
 void MotorSSLBrushless::init_interrupt() {
 
     /* EXTI interrupt init*/
-    HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-    NVIC_SetVector(EXTI0_IRQn, (uint32_t)&custom_EXTI_IRQHandler);
-    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+    HAL_NVIC_SetPriority(HALL_U_EXTI_IRQn, 0, 0);
+    NVIC_SetVector(HALL_U_EXTI_IRQn, (uint32_t)&custom_EXTI_IRQHandler);
+    HAL_NVIC_EnableIRQ(HALL_U_EXTI_IRQn);
 
-    HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
-    NVIC_SetVector(EXTI1_IRQn, (uint32_t)&custom_EXTI_IRQHandler);
-    HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+    HAL_NVIC_SetPriority(HALL_V_EXTI_IRQn, 0, 0);
+    NVIC_SetVector(HALL_V_EXTI_IRQn, (uint32_t)&custom_EXTI_IRQHandler);
+    HAL_NVIC_EnableIRQ(HALL_V_EXTI_IRQn);
 
-    HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-    NVIC_SetVector(EXTI2_IRQn, (uint32_t)&custom_EXTI_IRQHandler);
-    HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+    HAL_NVIC_SetPriority(HALL_W_EXTI_IRQn, 0, 0);
+    NVIC_SetVector(HALL_W_EXTI_IRQn, (uint32_t)&custom_EXTI_IRQHandler);
+    HAL_NVIC_EnableIRQ(HALL_W_EXTI_IRQn);
 }
 
 void MotorSSLBrushless::start() {

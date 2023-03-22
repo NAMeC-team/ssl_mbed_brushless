@@ -9,7 +9,7 @@
 
 static DigitalOut led(LED1);
 
-#define CONTROL_RATE 50ms
+#define CONTROL_RATE 100ms
 #define CONTROL_FLAG 0x01
 Ticker controlTicker;
 EventFlags controlFlag;
@@ -33,8 +33,8 @@ SPI spi_sensor(ENC_MOSI, ENC_MISO, ENC_SCK); // mosi, miso, sclk
 sixtron::MotorSensorMbedAS5047P *sensor;
 
 // Motor
-// #include "motor_ssl_brushless_L4.h"
-// sixtron::MotorSSLBrushless *motor;
+#include "motor_ssl_brushless.h"
+sixtron::MotorSSLBrushless *motor;
 
 // Setup terminal custom printf fonction
 static char terminal_buff[64];
@@ -81,10 +81,10 @@ int main() {
     pid_motor_params.Ki = 500.0f;
     pid_motor_params.Kd = 0.00f;
     pid_motor_params.ramp = 3.0f * dt_pid;
-    //    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, 250.0f);
-    //    motor->init();
-
-    //    motor->setPWM(120);
+    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, 250.0f);
+    motor->init();
+    //
+    motor->setPWM(60);
 
     int printf_incr = 0;
     while (true) {
@@ -95,10 +95,13 @@ int main() {
 
         // Do control loop
         led = !led;
-        if (led) {
-            terminal_printf("AS5047 sensor value: %8lld\tspeed: %6dmm/s\r",
+        //        terminal_printf("Last hall = %d\n", motor->get_last_hall_value());
+        if (1) {
+            terminal_printf("AS5047 sensor value: %8lld\tspeed: %6dmm/s\thall: %d\r",
                     sensor->getTickCount(),
-                    int32_t(sensor->getSpeed() * 1000.0f));
+                    int32_t(sensor->getSpeed() * 1000.0f),
+                    motor->get_last_hall_value());
+
             //            terminal_printf("Alive! (i=%d)\n", printf_incr);
             printf_incr++;
         }

@@ -135,13 +135,13 @@ typedef enum {
     CAN1_RX = PB_8, // CAN1_RX, optional, R29 must be mount
     CAN1_TX = PB_9, // CAN1_TX, optional, R28 must be mount
 
-    PWM_W = PA_10,
-    PWM_V = PA_9,
     PWM_U = PA_8,
+    PWM_V = PA_9,
+    PWM_W = PA_10,
 
-    EN_W = PC_8,
-    EN_V = PC_7,
     EN_U = PC_6,
+    EN_V = PC_7,
+    EN_W = PC_8,
 
     ENC_MOSI = PB_15,
     ENC_MISO = PB_14,
