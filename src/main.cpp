@@ -9,7 +9,7 @@
 
 static DigitalOut led(LED1);
 
-#define CONTROL_RATE 100ms
+#define CONTROL_RATE 10ms
 #define CONTROL_FLAG 0x01
 Ticker controlTicker;
 EventFlags controlFlag;
@@ -81,36 +81,30 @@ int main() {
     pid_motor_params.Ki = 500.0f;
     pid_motor_params.Kd = 0.00f;
     pid_motor_params.ramp = 3.0f * dt_pid;
-    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params);
+    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, sensor, 200.0f);
     motor->init();
-    //
-    motor->setPWM(60);
+
     wait_us(2000000);
-    motor->setPWM(0);
-    wait_us(2000000);
-    motor->setPWM(-60);
-    wait_us(2000000);
-    motor->setPWM(0);
-    wait_us(2000000);
-    motor->setPWM(90);
+    motor->setSpeed(0.7f);
 
     int printf_incr = 0;
     while (true) {
         // Wait for ticker flag
         controlFlag.wait_any(CONTROL_FLAG);
 
-        sensor->update();
+        motor->update();
 
         // Do control loop
-        led = !led;
+        //        led = !led;
         //        terminal_printf("Last hall = %d\n", motor->get_last_hall_value());
-        if (1) {
+        if (printf_incr > 10) {
+            printf_incr = 0;
             terminal_printf("AS5047 sensor value: %8lld\tspeed: %6dmm/s\thall: %d\r",
                     sensor->getTickCount(),
                     int32_t(sensor->getSpeed() * 1000.0f),
                     motor->get_last_hall_value());
 
-            //            terminal_printf("Alive! (i=%d)\n", printf_incr);
+        } else {
             printf_incr++;
         }
     }

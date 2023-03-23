@@ -39,8 +39,9 @@ void motor_control_stop(void);
 void _motor_control_update_pwm(int sector, int pwm_value);
 void custom_EXTI_IRQHandler(void);
 
-MotorSSLBrushless::MotorSSLBrushless(float rate_dt, PID_params motor_pid, float max_pwm):
-        _pid(motor_pid, rate_dt) {
+MotorSSLBrushless::MotorSSLBrushless(
+        float rate_dt, PID_params motor_pid, MotorSensor *sensor, float max_pwm):
+        _sensor(sensor), _pid(motor_pid, rate_dt) {
 
     _pid.setLimit(sixtron::PID_limit::output_limit_HL, max_pwm);
 
@@ -204,15 +205,23 @@ void MotorSSLBrushless::stop() {
 
 void MotorSSLBrushless::update() {
     // update magnetic sensor value
-    //    _currentSpeed = _sensor->getSpeed();
+    _sensor->update();
 
     // update PID
+    _currentSpeed = _sensor->getSpeed();
     PID_args motor_pid_args;
     motor_pid_args.actual = _currentSpeed;
     motor_pid_args.target = _targetSpeed;
     _pid.compute(&motor_pid_args);
 
-    _motorPwm = motor_pid_args.output;
+    //    _motorPwm = motor_pid_args.output;
+
+    _pwm_value = int(motor_pid_args.output);
+
+    if (call_interrupt_at_next_pwm_update) {
+        _motor_control_update_sector();
+        _motor_control_update_pwm(_sector, _pwm_value);
+    }
 
     // update hardware
 }
@@ -221,13 +230,13 @@ void MotorSSLBrushless::setSpeed(float speed_ms) {
     _targetSpeed = speed_ms;
 }
 
-void MotorSSLBrushless::setPWM(int pwm) {
-    _pwm_value = pwm;
-    if (call_interrupt_at_next_pwm_update) {
-        _motor_control_update_sector();
-        _motor_control_update_pwm(_sector, _pwm_value);
-    }
-}
+// void MotorSSLBrushless::setPWM(int pwm) {
+//     _pwm_value = pwm;
+//     if (call_interrupt_at_next_pwm_update) {
+//         _motor_control_update_sector();
+//         _motor_control_update_pwm(_sector, _pwm_value);
+//     }
+// }
 
 float MotorSSLBrushless::getSpeed() {
     return _currentSpeed;

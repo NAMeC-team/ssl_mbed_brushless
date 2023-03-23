@@ -8,9 +8,10 @@
 // MBED LIBRARIES
 #include "mbed.h"
 #include "motor/motor.h"
+#include "motor_sensor/motor_sensor.h"
 #include "pid/pid.h"
 
-// Hardware function, different for each board
+// Hardware functions, different for each board
 #include "hardware_specific.h"
 
 namespace sixtron {
@@ -18,7 +19,10 @@ namespace sixtron {
 class MotorSSLBrushless: Motor {
 
 public:
-    MotorSSLBrushless(float rate_dt, PID_params motor_pid, float max_pwm = MOTOR_MAX_PWM);
+    MotorSSLBrushless(float rate_dt,
+            PID_params motor_pid,
+            MotorSensor *sensor,
+            float max_pwm = MOTOR_MAX_PWM);
 
     void init() override;
 
@@ -30,7 +34,7 @@ public:
 
     void setSpeed(float speed_ms) override;
 
-    void setPWM(int pwm);
+    //    void setPWM(int pwm);
 
     float getSpeed() override;
 
@@ -38,6 +42,8 @@ public:
 
 private:
     static void init_interrupt();
+
+    MotorSensor *_sensor;
 
     PID _pid;
 
