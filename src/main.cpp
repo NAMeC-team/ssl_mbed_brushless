@@ -85,6 +85,10 @@ int main() {
     motor->init();
     //
     motor->setPWM(60);
+    wait_us(3000000);
+    motor->setPWM(0);
+    wait_us(3000000);
+    motor->setPWM(-60);
 
     int printf_incr = 0;
     while (true) {

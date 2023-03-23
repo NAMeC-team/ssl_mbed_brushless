@@ -199,16 +199,34 @@ void MotorSSLBrushless::init_pwms() {
     TIM_OC_InitTypeDef sConfigOC = { 0 };
     TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = { 0 };
 
-    /* USER CODE BEGIN TIM1_Init 1 */
+    /**
+     * For STM32F103RBT6, when HSI is used as clock source generator,
+     * Mbed will configure APB2CLK Clock frequency output at:
+     *  - 48MHz if USBDEVICE is used (by default)
+     *  - 64Mhz if not.
+     *
+     * To get 40kHz frequency, this should be configured:
+     *  - 48MHz -> prescal = 0, period = 1200
+     *  - 64MHz -> prescal = 0, period = 1600
+     *
+     * If you want to remove USBDEVICE to get a better period:
+     *  - In custom_targets.json, remove the bloc: << "device_has_add": ["USBDEVICE"], >>
+     *  - In mbed_app.json, remove: << "drivers-usb" >>
+     *  - In main.cpp, remove any code using the USBSerial.
+     *
+     */
 
-    /* USER CODE END TIM1_Init 1 */
     htim1.Instance = TIM1;
     htim1.Init.Prescaler = 0;
     htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim1.Init.Period = 1000;
+#if (DEVICE_USBDEVICE)
+    htim1.Init.Period = 1200;
+#else
+    htim1.Init.Period = 1600;
+#endif
     htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim1.Init.RepetitionCounter = 0;
-    htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim1) != HAL_OK) {
         while (true)
             ;
@@ -239,17 +257,17 @@ void MotorSSLBrushless::init_pwms() {
         while (true)
             ;
     }
-    __HAL_TIM_ENABLE_OCxPRELOAD(&htim1, TIM_CHANNEL_1);
+    //    __HAL_TIM_ENABLE_OCxPRELOAD(&htim1, TIM_CHANNEL_1);
     if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK) {
         while (true)
             ;
     }
-    __HAL_TIM_ENABLE_OCxPRELOAD(&htim1, TIM_CHANNEL_2);
+    //    __HAL_TIM_ENABLE_OCxPRELOAD(&htim1, TIM_CHANNEL_2);
     if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK) {
         while (true)
             ;
     }
-    __HAL_TIM_ENABLE_OCxPRELOAD(&htim1, TIM_CHANNEL_3);
+    //    __HAL_TIM_ENABLE_OCxPRELOAD(&htim1, TIM_CHANNEL_3);
     sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
     sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
     sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
