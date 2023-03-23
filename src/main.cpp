@@ -81,14 +81,18 @@ int main() {
     pid_motor_params.Ki = 500.0f;
     pid_motor_params.Kd = 0.00f;
     pid_motor_params.ramp = 3.0f * dt_pid;
-    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, 250.0f);
+    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params);
     motor->init();
     //
     motor->setPWM(60);
-    wait_us(3000000);
+    wait_us(2000000);
     motor->setPWM(0);
-    wait_us(3000000);
+    wait_us(2000000);
     motor->setPWM(-60);
+    wait_us(2000000);
+    motor->setPWM(0);
+    wait_us(2000000);
+    motor->setPWM(90);
 
     int printf_incr = 0;
     while (true) {

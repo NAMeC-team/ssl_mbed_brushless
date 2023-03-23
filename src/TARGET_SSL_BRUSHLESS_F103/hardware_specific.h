@@ -2,13 +2,8 @@
  * Copyright (c) 2023, CATIE
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_F103_H
-#define CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_F103_H
-
-// MBED LIBRARIES
-#include "mbed.h"
-#include "motor/motor.h"
-#include "pid/pid.h"
+#ifndef CATIE_SIXTRON_BRUSHLESS_F103_HARDWARE_SPECIFIC_H
+#define CATIE_SIXTRON_BRUSHLESS_F103_HARDWARE_SPECIFIC_H
 
 // STM32 LL LIBRARIES
 #include "stm32f1xx_ll_bus.h"
@@ -25,7 +20,28 @@
 
 namespace sixtron {
 
-#define DEFAULT_MOTOR_MAX_PWM 1.0f // max PWM with mbed is 1.0f
+/**
+ * For STM32F103RBT6, when HSI is used as clock source generator,
+ * Mbed will configure APB2CLK Clock frequency output at:
+ *  - 48MHz if USBDEVICE is used (by default)
+ *  - 64Mhz if not.
+ *
+ * To get 40kHz frequency, this should be configured:
+ *  - 48MHz -> prescal = 0, period = 1200
+ *  - 64MHz -> prescal = 0, period = 1600
+ *
+ * If you want to remove USBDEVICE to get a better period:
+ *  - In custom_targets.json, remove the bloc: << "device_has_add": ["USBDEVICE"], >>
+ *  - In mbed_app.json, remove: << "drivers-usb" >>
+ *  - In main.cpp, remove any code using the USBSerial.
+ *
+ */
+
+#if (DEVICE_USBDEVICE)
+#define MOTOR_MAX_PWM 1200 // 48MHz/1200 = 40kHz
+#else
+#define MOTOR_MAX_PWM 1600 // 64MHz/1600 = 40kHz
+#endif
 
 #define HALL_U_Pin GPIO_PIN_0 // PA0
 #define HALL_U_GPIO_Port GPIOA
@@ -51,40 +67,9 @@ namespace sixtron {
 #define PWM_W_Pin GPIO_PIN_10 // PA10
 #define PWM_W_GPIO_Port GPIOA
 
-class MotorSSLBrushless: Motor {
-
-public:
-    MotorSSLBrushless(float rate_dt, PID_params motor_pid, float max_pwm = DEFAULT_MOTOR_MAX_PWM);
-
-    void init() override;
-
-    void start() override;
-
-    void stop() override;
-
-    void update() override;
-
-    void setSpeed(float speed_ms) override;
-
-    void setPWM(int pwm);
-
-    float getSpeed() override;
-
-    int get_last_hall_value();
-
-private:
-    static void init_gpios();
-    static void init_pwms();
-    static void init_interrupt();
-
-    PID _pid;
-
-    motor_status _currentStatus;
-    float _targetSpeed = 0.0f;
-    float _currentSpeed = 0.0f;
-    float _motorPwm = 0.0f;
-};
+void init_gpios();
+void init_pwms();
 
 } // namespace sixtron
 
-#endif // CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_F103_H
+#endif // CATIE_SIXTRON_BRUSHLESS_F103_HARDWARE_SPECIFIC_H

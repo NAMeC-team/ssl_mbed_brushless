@@ -2,13 +2,8 @@
  * Copyright (c) 2023, CATIE
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_L4A6_H
-#define CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_L4A6_H
-
-// MBED LIBRARIES
-#include "mbed.h"
-#include "motor/motor.h"
-#include "pid/pid.h"
+#ifndef CATIE_SIXTRON_BRUSHLESS_L4A6_HARDWARE_SPECIFIC_H
+#define CATIE_SIXTRON_BRUSHLESS_L4A6_HARDWARE_SPECIFIC_H
 
 // STM32 LL LIBRARIES
 #include "stm32l4xx_ll_bus.h"
@@ -39,7 +34,7 @@
 
 namespace sixtron {
 
-#define DEFAULT_MOTOR_MAX_PWM 1.0f // max PWM with mbed is 1.0f
+#define MOTOR_MAX_PWM 2000 // 80MHz / 2000 = 40kHz
 
 #define HALL_U_Pin GPIO_PIN_0 // PA0
 #define HALL_U_GPIO_Port GPIOA
@@ -65,40 +60,9 @@ namespace sixtron {
 #define PWM_W_Pin GPIO_PIN_10 // PA10
 #define PWM_W_GPIO_Port GPIOA
 
-class MotorSSLBrushless: Motor {
-
-public:
-    MotorSSLBrushless(float rate_dt, PID_params motor_pid, float max_pwm = DEFAULT_MOTOR_MAX_PWM);
-
-    void init() override;
-
-    void start() override;
-
-    void stop() override;
-
-    void update() override;
-
-    void setSpeed(float speed_ms) override;
-
-    void setPWM(int pwm);
-
-    float getSpeed() override;
-
-    int get_last_hall_value();
-
-private:
-    static void init_gpios();
-    static void init_pwms();
-    static void init_interrupt();
-
-    PID _pid;
-
-    motor_status _currentStatus;
-    float _targetSpeed = 0.0f;
-    float _currentSpeed = 0.0f;
-    float _motorPwm = 0.0f;
-};
+void init_gpios();
+void init_pwms();
 
 } // namespace sixtron
 
-#endif // CATIE_SIXTRON_MOTOR_SSL_BRUSHLESS_L4A6_H
+#endif // CATIE_SIXTRON_BRUSHLESS_L4A6_HARDWARE_SPECIFIC_H
