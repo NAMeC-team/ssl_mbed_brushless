@@ -35,6 +35,7 @@ static SPI spi_sensor(ENC_MOSI, ENC_MISO, ENC_SCK); // mosi, miso, sclk
 sixtron::MotorSensorMbedAS5047P *sensor;
 
 // SPI Driver with nanoPB
+#include "hardware_specific.h"
 #include "pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
@@ -45,6 +46,7 @@ static uint8_t transmit_buffer[MAX_BUFF_INDEX];
 uint32_t error_counter = 0;
 volatile int newCommandReceivedFlag = 0;
 MbedCRC<POLY_32BIT_ANSI, 32> ct;
+Timeout spi_timeout;
 
 // Motor
 #include "motor_ssl_brushless.h"
@@ -120,54 +122,28 @@ void process_new_msg() {
     transmit_buffer[0] = message_length;
 }
 
-SPI_HandleTypeDef hspi1;
-
-void init_spi_mainboard() {
-
-    hspi1.Instance = SPI1;
-    hspi1.Init.Mode = SPI_MODE_SLAVE;
-    hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-    hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-    hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
-    hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi1.Init.CRCPolynomial = 7;
-    hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-    hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
-    if (HAL_SPI_Init(&hspi1) != HAL_OK) {
-        //        Error_Handler();
-    }
-
-    __HAL_RCC_SPI1_CLK_ENABLE();
-
-    GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**SPI1 GPIO Configuration
-    PA4     ------> SPI1_NSS
-    PA5     ------> SPI1_SCK
-    PA6     ------> SPI1_MISO
-    PA7     ------> SPI1_MOSI
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-}
-
 void custom_SPI1_IRQHandler() {
 
-    HAL_SPI_IRQHandler(&hspi1);
+    HAL_SPI_IRQHandler(&sixtron::hspi1);
+}
+
+// This is a workaround for F103 boards, sometimes they stuck for no reasons ...
+void restart_SPIT_IT() {
+    HAL_SPI_Abort_IT(&sixtron::hspi1);
+    HAL_SPI_TransmitReceive_IT(
+            &sixtron::hspi1, transmit_buffer, receive_buffer, sizeof(receive_buffer));
+    update_speed(Commands_STOP, 0.0f); // stop motor just in case
 }
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
-    HAL_SPI_TransmitReceive_IT(&hspi1, transmit_buffer, receive_buffer, sizeof(receive_buffer));
+
+    HAL_SPI_TransmitReceive_IT(
+            &sixtron::hspi1, transmit_buffer, receive_buffer, sizeof(receive_buffer));
     newCommandReceivedFlag = 1;
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
+    // F103 unstuck hack
+    spi_timeout.detach();
+    spi_timeout.attach(&restart_SPIT_IT, 100ms);
 }
 
 int main() {
@@ -180,13 +156,14 @@ int main() {
     usb_serial.connect();
 
     // Setup DRV SPI
-    init_spi_mainboard();
+    sixtron::init_spi_mainboard();
     HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
     NVIC_SetVector(SPI1_IRQn, (uint32_t)&custom_SPI1_IRQHandler);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 
     // Start SPI IT
-    HAL_SPI_TransmitReceive_IT(&hspi1, transmit_buffer, receive_buffer, sizeof(receive_buffer));
+    HAL_SPI_TransmitReceive_IT(
+            &sixtron::hspi1, transmit_buffer, receive_buffer, sizeof(receive_buffer));
 
     // Setup control ticker
     controlTicker.attach(&controlFlagUpdate, CONTROL_RATE);
@@ -243,19 +220,20 @@ int main() {
             // Do control loop
             motor->update();
 
-            if (printf_incr > 10) {
-                printf_incr = 0;
-                terminal_printf(
-                        "AS5047: %8lld\tspeed: %5dmm/s (pwm=%4d)\ttarget:%5dmm/s\thall: %d\r",
-                        sensor->getTickCount(),
-                        int32_t(sensor->getSpeed() * 1000.0f),
-                        motor->getPWM(),
-                        int32_t(target_speed * 1000.0f),
-                        motor->get_last_hall_value());
-
-            } else {
-                printf_incr++;
-            }
+            //            if (printf_incr > 10) {
+            //                printf_incr = 0;
+            //                terminal_printf(
+            //                        "AS5047: %8lld\tspeed: %5dmm/s
+            //                        (pwm=%4d)\ttarget:%5dmm/s\thall: %d\r",
+            //                        sensor->getTickCount(),
+            //                        int32_t(sensor->getSpeed() * 1000.0f),
+            //                        motor->getPWM(),
+            //                        int32_t(target_speed * 1000.0f),
+            //                        motor->get_last_hall_value());
+            //
+            //            } else {
+            //                printf_incr++;
+            //            }
         }
     }
 }

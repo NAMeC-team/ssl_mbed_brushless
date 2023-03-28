@@ -34,6 +34,8 @@
 
 namespace sixtron {
 
+extern SPI_HandleTypeDef hspi1;
+
 #define MOTOR_MAX_PWM 2000 // 80MHz / 2000 = 40kHz
 
 #define LED_Pin GPIO_PIN_1 // PB1
@@ -65,6 +67,7 @@ namespace sixtron {
 
 void init_gpios();
 void init_pwms();
+void init_spi_mainboard();
 
 } // namespace sixtron
 

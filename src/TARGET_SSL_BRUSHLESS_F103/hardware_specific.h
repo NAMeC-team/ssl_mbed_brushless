@@ -20,6 +20,8 @@
 
 namespace sixtron {
 
+extern SPI_HandleTypeDef hspi1;
+
 /**
  * For STM32F103RBT6, when HSI is used as clock source generator,
  * Mbed will configure APB2CLK Clock frequency output at:
@@ -72,6 +74,7 @@ namespace sixtron {
 
 void init_gpios();
 void init_pwms();
+void init_spi_mainboard();
 
 } // namespace sixtron
 
