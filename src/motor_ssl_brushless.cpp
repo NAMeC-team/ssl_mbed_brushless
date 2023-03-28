@@ -174,11 +174,11 @@ void custom_EXTI_IRQHandler(void) {
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_2);
 
     //    debug led
-    if (HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin) == GPIO_PIN_RESET) {
-        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-    } else {
-        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-    }
+    //    if (HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin) == GPIO_PIN_RESET) {
+    //        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+    //    } else {
+    //        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+    //    }
 
     _motor_control_update_sector();
     _motor_control_update_pwm(_sector, _pwm_value);
@@ -237,6 +237,7 @@ void MotorSSLBrushless::update() {
 
 void MotorSSLBrushless::setSpeed(float speed_ms) {
     _targetSpeed = speed_ms;
+    call_interrupt_at_next_pwm_update = 1;
 }
 
 // void MotorSSLBrushless::setPWM(int pwm) {
