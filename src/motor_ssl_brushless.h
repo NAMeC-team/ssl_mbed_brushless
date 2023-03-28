@@ -20,7 +20,7 @@ namespace sixtron {
 // for 3.5m/s max no-load speed -> max_pwm = MOTOR_MAX_PWM / 5
 // for 2.3m/s max no-load speed -> max_pwm = MOTOR_MAX_PWM / 7
 // for 1.5m/s max no-load speed -> max_pwm = MOTOR_MAX_PWM / 10
-#define DEFAULT_MAX_PWM (MOTOR_MAX_PWM / 7.0f)
+#define DEFAULT_MAX_PWM (MOTOR_MAX_PWM / 6.0f)
 
 // DEFAULT_MAX_SPEED: The max input speed (in m/s) the PID can process.
 // Should be lesser than the MAX_PWM for better correction !
@@ -46,6 +46,8 @@ public:
     void setSpeed(float speed_ms) override;
 
     //    void setPWM(int pwm);
+
+    int getPWM();
 
     float getSpeed() override;
 

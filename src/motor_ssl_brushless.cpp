@@ -251,4 +251,8 @@ float MotorSSLBrushless::getSpeed() {
     return _currentSpeed;
 }
 
+int MotorSSLBrushless::getPWM() {
+    return _pwm_value;
+}
+
 } // namespace sixtron

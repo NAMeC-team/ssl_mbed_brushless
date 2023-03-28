@@ -12,10 +12,12 @@ static DigitalOut led(LED1);
 #define CONTROL_RATE 10ms
 #define CONTROL_FLAG 0x01
 Ticker controlTicker;
-EventFlags controlFlag;
+// EventFlags controlFlag; // can't use EventFlags for this application.
+static volatile int controlFlag;
 
 void controlFlagUpdate() {
-    controlFlag.set(CONTROL_FLAG);
+    //    controlFlag.set(CONTROL_FLAG);
+    controlFlag = 1;
 }
 
 // Set up printf over USB
@@ -37,7 +39,7 @@ sixtron::MotorSensorMbedAS5047P *sensor;
 #include "pb_decode.h"
 #include "pb_encode.h"
 #include "ssl_data.pb.h"
-static SPI spi_mainboard(DRV_MOSI, DRV_MISO, DRV_CLK);
+static SPISlave spi_mainboard(DRV_MOSI, DRV_MISO, DRV_CLK, DRV_CS); // mosi, miso, sclk, ssel
 uint8_t receive_buffer[BrushlessToMainBoard_size + 5];
 uint8_t transmit_buffer[BrushlessToMainBoard_size + 5];
 uint32_t error_counter = 0;
@@ -48,7 +50,7 @@ bool spi_alive = false;
 sixtron::MotorSSLBrushless *motor;
 
 // Setup terminal custom printf fonction
-static char terminal_buff[64];
+static char terminal_buff[80];
 static int32_t terminal_length;
 
 static void terminal_printf(const char *fmt, ...) {
@@ -64,6 +66,7 @@ static float dt_pid = 0.0f, hz_pid = 0.0f;
 int main() {
 
     led = 0;
+    controlFlag = 0;
 
     // Setup USB Serial
     usb_serial.init();
@@ -108,23 +111,27 @@ int main() {
 
     int printf_incr = 0;
     while (true) {
-        // Wait for ticker flag
-        controlFlag.wait_any(CONTROL_FLAG);
 
-        motor->update();
+        // Wait for motor update ticker flag
+        //        controlFlag.wait_any(CONTROL_FLAG); // Can't pool SPISlave with this.
+        //        if (controlFlag.get() == CONTROL_FLAG) { // This doesn't seem to work...
+        if (controlFlag) {
+            controlFlag = 0;
 
-        // Do control loop
-        //        led = !led;
-        //        terminal_printf("Last hall = %d\n", motor->get_last_hall_value());
-        if (printf_incr > 10) {
-            printf_incr = 0;
-            terminal_printf("AS5047 sensor value: %8lld\tspeed: %6dmm/s\thall: %d\r",
-                    sensor->getTickCount(),
-                    int32_t(sensor->getSpeed() * 1000.0f),
-                    motor->get_last_hall_value());
+            // Do control loop
+            motor->update();
 
-        } else {
-            printf_incr++;
+            if (printf_incr > 10) {
+                printf_incr = 0;
+                terminal_printf("AS5047 sensor value: %8lld\tspeed: %6dmm/s (pwm=%4d)\thall: %d\r",
+                        sensor->getTickCount(),
+                        int32_t(sensor->getSpeed() * 1000.0f),
+                        motor->getPWM(),
+                        motor->get_last_hall_value());
+
+            } else {
+                printf_incr++;
+            }
         }
     }
 }
