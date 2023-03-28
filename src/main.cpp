@@ -92,7 +92,10 @@ int main() {
     pid_motor_params.Ki = 500.0f;
     pid_motor_params.Kd = 0.00f;
     pid_motor_params.ramp = 3.0f * dt_pid;
-    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, sensor, MOTOR_MAX_PWM / 5);
+    // for 3.5m/s max -> max_pwm = MOTOR_MAX_PWM / 5
+    // for 2.3m/s max -> max_pwm = MOTOR_MAX_PWM / 7
+    // for 1.5m/s max -> max_pwm = MOTOR_MAX_PWM / 10
+    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, sensor, MOTOR_MAX_PWM / 7);
     motor->init();
 
     // Blink init
