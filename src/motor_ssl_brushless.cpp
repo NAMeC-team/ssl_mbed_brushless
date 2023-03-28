@@ -13,7 +13,8 @@ static int _pwm_value = 0;
 static int _sector = 0;
 static int32_t _rotation = 0;
 static int call_interrupt_at_next_pwm_update
-        = 0; // This is a security, if pwm not 0 anymore, and interrupt would not launch
+        = 0; // This is a security, if pwm not 0 anymore, and interrupt would not launch because
+             // motor don't move yet
 
 typedef struct {
     GPIO_TypeDef *pwm_port;
@@ -39,11 +40,15 @@ void motor_control_stop(void);
 void _motor_control_update_pwm(int sector, int pwm_value);
 void custom_EXTI_IRQHandler(void);
 
-MotorSSLBrushless::MotorSSLBrushless(
-        float rate_dt, PID_params motor_pid, MotorSensor *sensor, float max_pwm):
+MotorSSLBrushless::MotorSSLBrushless(float rate_dt,
+        PID_params motor_pid,
+        MotorSensor *sensor,
+        float max_pwm,
+        float max_speed_ms):
         _sensor(sensor), _pid(motor_pid, rate_dt) {
 
     _pid.setLimit(sixtron::PID_limit::output_limit_HL, max_pwm);
+    _pid.setLimit(sixtron::PID_limit::input_limit_HL, max_speed_ms);
 
     _currentStatus = motor_status::stop;
 }
@@ -58,6 +63,9 @@ void MotorSSLBrushless::init() {
 
     // Init interruptions
     init_interrupt();
+
+    // Force to call interrupt for the first update, because motor don't move yet
+    call_interrupt_at_next_pwm_update = 1;
 
     // Update HALL sector at least one time
     _motor_control_update_sector();
@@ -149,6 +157,7 @@ void _motor_control_update_pwm(int sector, int pwm_value) {
         pwm = (uint32_t)(-pwm_value);
     } else {
         motor_control_stop();
+        // force to call interrupt at next update, because motor will not move
         call_interrupt_at_next_pwm_update = 1;
         return;
     }

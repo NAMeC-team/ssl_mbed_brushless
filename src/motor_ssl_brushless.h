@@ -16,13 +16,24 @@
 
 namespace sixtron {
 
+// DEFAULT_MAX_PWM: The max pwm the pid can output
+// for 3.5m/s max no-load speed -> max_pwm = MOTOR_MAX_PWM / 5
+// for 2.3m/s max no-load speed -> max_pwm = MOTOR_MAX_PWM / 7
+// for 1.5m/s max no-load speed -> max_pwm = MOTOR_MAX_PWM / 10
+#define DEFAULT_MAX_PWM (MOTOR_MAX_PWM / 7.0f)
+
+// DEFAULT_MAX_SPEED: The max input speed (in m/s) the PID can process.
+// Should be lesser than the MAX_PWM for better correction !
+#define DEFAULT_MAX_SPEED (1.5f)
+
 class MotorSSLBrushless: Motor {
 
 public:
     MotorSSLBrushless(float rate_dt,
             PID_params motor_pid,
             MotorSensor *sensor,
-            float max_pwm = MOTOR_MAX_PWM);
+            float max_pwm = DEFAULT_MAX_PWM,
+            float max_speed_ms = DEFAULT_MAX_SPEED);
 
     void init() override;
 
