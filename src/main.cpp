@@ -29,8 +29,19 @@ FileHandle *mbed::mbed_override_console(int fd) {
 #define ENC_RESOLUTION 16383
 #define MOTOR_REDUCTION 1
 #define ENC_WHEEL_RADIUS (0.058f / 2.0f)
-SPI spi_sensor(ENC_MOSI, ENC_MISO, ENC_SCK); // mosi, miso, sclk
+static SPI spi_sensor(ENC_MOSI, ENC_MISO, ENC_SCK); // mosi, miso, sclk
 sixtron::MotorSensorMbedAS5047P *sensor;
+
+// SPI Driver with nanoPB
+#include "pb.h"
+#include "pb_decode.h"
+#include "pb_encode.h"
+#include "ssl_data.pb.h"
+static SPI spi_mainboard(DRV_MOSI, DRV_MISO, DRV_CLK);
+uint8_t receive_buffer[BrushlessToMainBoard_size + 5];
+uint8_t transmit_buffer[BrushlessToMainBoard_size + 5];
+uint32_t error_counter = 0;
+bool spi_alive = false;
 
 // Motor
 #include "motor_ssl_brushless.h"
@@ -81,11 +92,19 @@ int main() {
     pid_motor_params.Ki = 500.0f;
     pid_motor_params.Kd = 0.00f;
     pid_motor_params.ramp = 3.0f * dt_pid;
-    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, sensor, 200.0f);
+    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, sensor, MOTOR_MAX_PWM / 5);
     motor->init();
 
-    wait_us(2000000);
-    motor->setSpeed(0.7f);
+    // Blink init
+    for (int i = 0; i < 10; i++) {
+        led = 1;
+        wait_us(50000);
+        led = 0;
+        wait_us(50000);
+    }
+
+    wait_us(1000000);
+    motor->setSpeed(1.0f);
 
     int printf_incr = 0;
     while (true) {

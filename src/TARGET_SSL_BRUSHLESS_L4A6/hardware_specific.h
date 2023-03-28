@@ -36,6 +36,9 @@ namespace sixtron {
 
 #define MOTOR_MAX_PWM 2000 // 80MHz / 2000 = 40kHz
 
+#define LED_Pin GPIO_PIN_1 // PB1
+#define LED_GPIO_Port GPIOB
+
 #define HALL_U_Pin GPIO_PIN_0 // PA0
 #define HALL_U_GPIO_Port GPIOA
 #define HALL_U_EXTI_IRQn EXTI0_IRQn
