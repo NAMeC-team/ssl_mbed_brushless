@@ -7,4 +7,10 @@ cmake-build-debug/
 mbed_config.h
 CMakeLists.txt
 
+mbed-os/
+motor/
+motor_sensor/
+nanopb/
+pid/
+
 # Do NOT ignore files below
