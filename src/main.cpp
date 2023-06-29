@@ -35,11 +35,11 @@ static SPI spi_sensor(ENC_MOSI, ENC_MISO, ENC_SCK); // mosi, miso, sclk
 sixtron::MotorSensorMbedAS5047P *sensor;
 
 // SPI Driver with nanoPB
+#include "brushless.pb.h"
 #include "hardware_specific.h"
 #include "pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
-#include "ssl_data.pb.h"
 #define MAX_BUFF_INDEX (BrushlessToMainBoard_size + 5)
 static uint8_t receive_buffer[MAX_BUFF_INDEX];
 static uint8_t transmit_buffer[MAX_BUFF_INDEX];
