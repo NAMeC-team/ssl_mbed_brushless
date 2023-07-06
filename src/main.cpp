@@ -141,9 +141,9 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
             &sixtron::hspi1, transmit_buffer, receive_buffer, sizeof(receive_buffer));
     newCommandReceivedFlag = 1;
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_1);
-    // F103 unstuck hack
-    spi_timeout.detach();
-    spi_timeout.attach(&restart_SPIT_IT, 100ms);
+    // // F103 unstuck hack
+    // spi_timeout.detach();
+    // spi_timeout.attach(&restart_SPIT_IT, 100ms);
 }
 
 int main() {
@@ -209,6 +209,9 @@ int main() {
         if (newCommandReceivedFlag) {
             newCommandReceivedFlag = 0;
             process_new_msg();
+                // F103 unstuck hack
+    spi_timeout.detach();
+    spi_timeout.attach(&restart_SPIT_IT, 200ms);
         }
 
         // Wait for motor update ticker flag
