@@ -118,7 +118,7 @@ void _motor_control_update_sector(void) {
 static inline void _motor_control_set_HZ(motor_control_phase_drive_t phase) {
     *(phase.pwm_compare_register) = 0;
 //    phase.en_port->BSRR = (uint32_t)phase.en_pin << 16u;
-    phase.en_port->BRR = phase.en_pin;
+    phase.en_port->BRR = (uint16_t)phase.en_pin;
 }
 
 static inline void _motor_control_set_ground(motor_control_phase_drive_t phase) {
@@ -238,8 +238,7 @@ void MotorSSLBrushless::update() {
 
 void MotorSSLBrushless::setSpeed(float speed_ms) {
 
-    if ((speed_ms == NAN) || (speed_ms == INFINITY) || (speed_ms == HUGE_VALL)
-            || (speed_ms == HUGE_VALF) || (speed_ms == HUGE_VAL)) {
+    if ((speed_ms == NAN) || (speed_ms == INFINITY)) {
         speed_ms = 0.0f;
     }
 

@@ -9,6 +9,9 @@
 
 static DigitalOut led(LED1);
 
+Watchdog &watchdog = Watchdog::get_instance();
+#define WATCHDOG_TIMEOUT 1000 //in ms
+
 #define CONTROL_RATE 10ms
 #define CONTROL_FLAG 0x01
 Ticker controlTicker;
@@ -201,7 +204,7 @@ int main() {
 
     // Debug
     int printf_incr = 0;
-
+    watchdog.start(WATCHDOG_TIMEOUT);
     // MBED BARE METAL LOOP, SO NO THREADS POSSIBLE, ALL MUST BE POOLED OR INTERRUPTED
     while (true) {
 
@@ -212,6 +215,8 @@ int main() {
             // F103 unstuck hack
             spi_timeout.detach();
             spi_timeout.attach(&restart_SPIT_IT, 200ms);
+            // watchdog update
+            watchdog.kick();
         }
 
         // Wait for motor update ticker flag
