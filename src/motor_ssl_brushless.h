@@ -53,6 +53,8 @@ public:
 
     int get_last_hall_value();
 
+    bool _pwm_null = false;
+
 private:
     static void init_interrupt();
 
@@ -64,6 +66,8 @@ private:
     float _targetSpeed = 0.0f;
     float _currentSpeed = 0.0f;
     float _motorPwm = 0.0f;
+
+    float _max_speed_ms = 0.0f;
 };
 
 } // namespace sixtron

@@ -76,6 +76,8 @@ void update_speed(Commands cmd, float speed) {
         target_speed = speed;
     } else if (cmd == Commands_STOP) {
         target_speed = 0.0f;
+    } else {
+        target_speed = 0.0f;
     }
 
     motor->setSpeed(target_speed);
@@ -215,8 +217,9 @@ int main() {
             // F103 unstuck hack
             spi_timeout.detach();
             spi_timeout.attach(&restart_SPIT_IT, 200ms);
-            // watchdog update
-            watchdog.kick();
+            // watchdog update only if pwm is not null
+            if(!motor->_pwm_null)
+                watchdog.kick();
         }
 
         // Wait for motor update ticker flag

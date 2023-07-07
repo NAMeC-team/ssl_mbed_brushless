@@ -49,6 +49,7 @@ MotorSSLBrushless::MotorSSLBrushless(float rate_dt,
 
     _pid.setLimit(sixtron::PID_limit::output_limit_HL, max_pwm);
     _pid.setLimit(sixtron::PID_limit::input_limit_HL, max_speed_ms);
+    _max_speed_ms = max_speed_ms;
 
     _currentStatus = motor_status::stop;
 }
@@ -117,7 +118,7 @@ void _motor_control_update_sector(void) {
 
 static inline void _motor_control_set_HZ(motor_control_phase_drive_t phase) {
     *(phase.pwm_compare_register) = 0;
-//    phase.en_port->BSRR = (uint32_t)phase.en_pin << 16u;
+    //    phase.en_port->BSRR = (uint32_t)phase.en_pin << 16u;
     phase.en_port->BRR = (uint16_t)phase.en_pin;
 }
 
@@ -132,9 +133,9 @@ static inline void _motor_control_set_pwm(motor_control_phase_drive_t phase, uin
 }
 
 void motor_control_stop(void) {
-    _motor_control_set_HZ(motor_phases[0]);
-    _motor_control_set_HZ(motor_phases[1]);
-    _motor_control_set_HZ(motor_phases[2]);
+    //    _motor_control_set_HZ(motor_phases[0]);
+    //    _motor_control_set_HZ(motor_phases[1]);
+    //    _motor_control_set_HZ(motor_phases[2]);
 }
 
 // static inline
@@ -228,6 +229,12 @@ void MotorSSLBrushless::update() {
 
     _pwm_value = int(motor_pid_args.output);
 
+    if (_pwm_value == 0) {
+        _pwm_null = true;
+    } else {
+        _pwm_null = false;
+    }
+
     if (call_interrupt_at_next_pwm_update) {
         _motor_control_update_sector();
         _motor_control_update_pwm(_sector, _pwm_value);
@@ -240,6 +247,12 @@ void MotorSSLBrushless::setSpeed(float speed_ms) {
 
     if ((speed_ms == NAN) || (speed_ms == INFINITY)) {
         speed_ms = 0.0f;
+    }
+
+    if (speed_ms > _max_speed_ms){
+       speed_ms = _max_speed_ms;
+    } else if (speed_ms < -_max_speed_ms){
+       speed_ms = -_max_speed_ms;
     }
 
     _targetSpeed = speed_ms;
