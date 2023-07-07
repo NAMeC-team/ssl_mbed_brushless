@@ -189,11 +189,11 @@ int main() {
 
     // Initialisation of the motor
     sixtron::PID_params pid_motor_params;
-    pid_motor_params.Kp = 250.0f;
-    pid_motor_params.Ki = 500.0f;
+    pid_motor_params.Kp = 350.0f;
+    pid_motor_params.Ki = 600.0f;
     pid_motor_params.Kd = 0.00f;
-    pid_motor_params.ramp = 3.0f * dt_pid;
-    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, sensor);
+    pid_motor_params.ramp = 6.0f * dt_pid;
+    motor = new sixtron::MotorSSLBrushless(dt_pid, pid_motor_params, sensor, DEFAULT_MAX_PWM, 2.5f);
     motor->init(); // see "motor_ssl_brushless.h" for max speed and max pwm.
 
     // Blink init
