@@ -51,7 +51,7 @@ Timeout spi_timeout;
 // Motor
 #include "motor_ssl_brushless.h"
 sixtron::MotorSSLBrushless *motor;
-float target_speed = 0; // in m/s
+float target_speed = 0.0f; // in m/s
 
 // Setup terminal custom printf fonction
 static char terminal_buff[80];
@@ -209,9 +209,9 @@ int main() {
         if (newCommandReceivedFlag) {
             newCommandReceivedFlag = 0;
             process_new_msg();
-                // F103 unstuck hack
-    spi_timeout.detach();
-    spi_timeout.attach(&restart_SPIT_IT, 200ms);
+            // F103 unstuck hack
+            spi_timeout.detach();
+            spi_timeout.attach(&restart_SPIT_IT, 200ms);
         }
 
         // Wait for motor update ticker flag
